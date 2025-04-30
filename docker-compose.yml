@@ -1,0 +1,37 @@
+# docker-compose.yml (Initial Placeholder - See full documentation for final version)
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8080:80" # Map host port 8080 to container port 80
+    volumes:
+      - ./public:/var/www/html/public # Mount public directory
+      - ./config:/var/www/html/config # Mount config directory (read-only recommended)
+    environment:
+      # Database connection details (read from .env file)
+      - MYSQL_HOST=db
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    ports:
+      # Optional: Expose MySQL port to host for debugging (e.g., 3307:3306)
+      # - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD} # Use root password from .env
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql # Persist database data
+
+volumes:
+  db_data: # Define the named volume
+
+# (Add more services or configurations as needed)

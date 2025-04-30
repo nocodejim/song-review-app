@@ -1,0 +1,26 @@
+# Ignore sensitive configuration if not using environment variables
+# config/database.php
+
+# Ignore vendor directories for dependency managers
+vendor/
+node_modules/
+
+# Ignore environment variable files
+.env
+.env.*
+!.env.example
+
+# Ignore log files
+*.log
+logs/
+*.log.*
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE/editor files
+.vscode/
+.idea/
+*.swp
+*~
