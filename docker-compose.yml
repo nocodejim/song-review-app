@@ -1,37 +1,79 @@
-# docker-compose.yml (Initial Placeholder - See full documentation for final version)
-version: '3.8'
+# docker-compose.yml for Song Review App Development Environment (Final v1)
+# Note: 'version' attribute at the top level is obsolete in newer Compose versions and removed.
 
 services:
+  # Web Service (PHP + Apache)
   web:
-    build: .
+    container_name: song-review-web # Optional: Assign a fixed name for easier reference
+    # Build the image using the Dockerfile in the current directory (.)
+    build:
+      context: .
+      dockerfile: Dockerfile # Explicitly state the Dockerfile name
+    # Define ports mapping: Map port 8080 on the host to port 80 in the container.
+    # Access the app via http://localhost:8080
     ports:
-      - "8080:80" # Map host port 8080 to container port 80
+      - "8080:80"
+    # Define volumes for development: Mount local code into the container.
+    # Changes made locally will be reflected immediately without rebuilding the image.
     volumes:
-      - ./public:/var/www/html/public # Mount public directory
-      - ./config:/var/www/html/config # Mount config directory (read-only recommended)
+      # Mount the entire project directory to /var/www/html inside the container.
+      - .:/var/www/html
+      # Note: The Dockerfile sets WORKDIR /var/www/html and configures
+      # Apache's DocumentRoot to /var/www/html/public
+    # Define environment variables passed to the PHP application (web service).
+    # These values are sourced from the .env file in the project root directory.
     environment:
-      # Database connection details (read from .env file)
-      - MYSQL_HOST=db
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      # Database connection details needed by config/database.php
+      - DB_HOST=db # Service name of the database container below
+      - DB_PORT=3306 # Standard MySQL port
+      - DB_NAME=${MYSQL_DATABASE} # Read from .env file
+      - DB_USER=${MYSQL_USER}     # Read from .env file
+      - DB_PASS=${MYSQL_PASSWORD} # Read from .env file
+      # Optional: Set PHP error reporting level specifically for development
+      - PHP_ERROR_REPORTING=E_ALL
+      - PHP_DISPLAY_ERRORS=On
+    # Make the web service depend on the db service starting first.
+    # This helps prevent connection errors on initial startup.
     depends_on:
       - db
+    # Restart policy: Automatically restart the container if it stops unexpectedly.
+    restart: unless-stopped
+    # Connect this service to the custom network defined below.
+    networks:
+      - app-network
 
+  # Database Service (MySQL)
   db:
+    container_name: song-review-db # Optional: Assign a fixed name
+    # Use the official MySQL 8.0 image. Pinning to a minor version can increase stability.
     image: mysql:8.0
-    ports:
-      # Optional: Expose MySQL port to host for debugging (e.g., 3307:3306)
-      # - "3307:3306"
+    # Environment variables to configure the MySQL container upon first creation.
+    # These values are sourced from the .env file.
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD} # Use root password from .env
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD} # Set root password for the DB instance
+      MYSQL_DATABASE: ${MYSQL_DATABASE}           # Automatically create this database
+      MYSQL_USER: ${MYSQL_USER}                 # Automatically create this user
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}           # Set the password for the created user
+    # Define a named volume to persist database data across container restarts/recreations.
+    # Data will be stored in a Docker-managed volume on the host machine.
     volumes:
-      - db_data:/var/lib/mysql # Persist database data
+      - db_data:/var/lib/mysql
+    # Optional: Map MySQL port 3306 inside the container to port 3307 on the host.
+    # Useful for connecting directly with GUI tools (like MySQL Workbench) from your host machine.
+    # Use a different host port (3307) to avoid conflicts if MySQL is running locally on 3306.
+    ports:
+       - "3307:3306"
+    # Restart policy
+    restart: unless-stopped
+    # Connect this service to the custom network.
+    networks:
+      - app-network
 
+# Define named volumes used by the services.
 volumes:
-  db_data: # Define the named volume
+  db_data: # Persists MySQL data
 
-# (Add more services or configurations as needed)
+# Define the custom network for inter-service communication.
+networks:
+  app-network:
+    driver: bridge # Use the default bridge network driver

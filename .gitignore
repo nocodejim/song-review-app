@@ -1,26 +1,25 @@
-# Ignore sensitive configuration if not using environment variables
-# config/database.php
-
-# Ignore vendor directories for dependency managers
-vendor/
-node_modules/
-
-# Ignore environment variable files
+# Environment variables file - contains sensitive credentials!
 .env
-.env.*
-!.env.example
 
-# Ignore log files
-*.log
-logs/
-*.log.*
-
-# Ignore OS-specific files
+# OS-specific files
 .DS_Store
 Thumbs.db
 
-# Ignore IDE/editor files
+# IDE/editor configuration files
 .vscode/
 .idea/
 *.swp
 *~
+
+# Dependency directories (if using Composer or npm later)
+vendor/
+node_modules/
+
+# Log files
+*.log
+logs/
+*.log.*
+
+# Build artifacts or temporary files (add as needed)
+# build/
+# dist/
